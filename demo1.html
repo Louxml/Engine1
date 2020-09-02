@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="https://cdn.jsdelivr.net/npm/signals@1.0.0/dist/signals.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stats.js@0.17.0/build/stats.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dat.gui@0.7.6/build/dat.gui.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.6/build/dat.gui.js"></script>
+    <script
+        src="https://rawcdn.githack.com/fanyonglong/DxFrameworks/2938558914c3fcf77450bb2b2f9672450109e0bb/utility/exampleTool.js"></script>
+ 
+    <style>
+        .fd {
+            color: rgba(0, 148, 255, 0.97)
+        }
+    </style>
+</head>
+ 
+<body>
+ 
+ 
+    <script>
+        function createCanvas(width = 800, height = 800) {
+            return $('<canvas>').attr({
+                width: width,
+                height: height
+            }).css({
+                border: 'solid 1px #888'
+            });
+            //    return d3.create('canvas').style('border', 'solid 1px #888').attr('width', width).attr('height', height);
+        }
+        function stats(render) {
+            var stats = new Stats();
+            stats.showPanel(1); // 0: fps, 1: ms, 2: mb, 3+: custom
+            document.body.appendChild(stats.dom);
+            console.log(stats);
+            function animate(t) {
+ 
+                stats.begin();
+ 
+                // monitored code goes here
+                render(t);
+                stats.end();
+ 
+                requestAnimationFrame(animate);
+ 
+            }
+            animate();
+ 
+            // requestAnimationFrame(animate);
+        }
+        var exmapleInstance = ExampleFactory(function (example) {
+ 
+            return function (page) {
+                page.onChange('init', function () {
+ 
+                });
+                page.onChange('show', function () {
+ 
+                });
+                page.onChange('hide', function () {
+ 
+                });
+                page.onChange('refresh', function () {
+ 
+                });
+ 
+                page.callback(page);
+ 
+            }
+        });
+        let pi2 = Math.PI * 2;
+        function Particle() {
+            //Original position 原始数据
+            this.original = {}
+            // 目标位置
+            this.destination = {
+                x: 0,
+                y: 0
+            }
+            this.destX = Infinity;
+            this.destY = Infinity;// 目标位置
+            this.x = 0;
+            this.y = 0;
+            this.vx = 0;//velocity 速度
+            this.vy = 0;
+            this.accX = 0;//加速度
+            this.accY = 0;//
+            this.force = 0;// 作用力
+            this.friction = 1;//摩擦力
+            this.accelerate = 0.001;//加速度系数
+            this.angle = 0;
+            this.radius = 5;
+            this.gravity = 0;// 重力
+            this.life = Infinity;
+            this.isDeath = false;
+            this.delta = 0;
+            this.spring = 1;// 弹力
+            this.globalAlpha = 1;
+            this.r = 0;
+            this.g = 0;
+            this.b = 0;
+            this.opacity = 1;
+            this.strokeStyle = 'none';
+            this.fillStyle = 'none';
+            this.lineWidth=1;
+ 
+            this.loop = false;
+            this.forever = false;  //永远
+            this.fillMode = '';//forwards  
+            this.paths=null;// 路径
+            this.closePath=false;
+            this.hooks = {
+                remove: new signals.Signal(),
+                restart: new signals.Signal(),
+                startDraw: new signals.Signal(),
+                draw: new signals.Signal(),
+                endDraw: new signals.Signal()
+            }
+            this.hooks.startDraw.add(function (ctx) {
+                ctx.beginPath();
+                if (this.fillStyle !== 'none') {
+                    ctx.fillStyle = this.fillStyle;
+                }
+                if (this.strokeStyle !== 'none') {
+                    ctx.strokeStyle = this.strokeStyle;
+                }
+                ctx.lineWidth=this.lineWidth;
+            }, this)
+            this.hooks.draw.add(function (ctx) {
+                if(this.paths){
+                    let paths=this.paths,len=paths.length;
+                    if(len>0){
+                        ctx.moveTo(paths[0][0],paths[0][1]);
+                        for(let i=1;i<len;i++){
+                            ctx.lineTo(paths[i][0],paths[i][1]);
+                        }
+                    }
+                }else{
+                    ctx.arc(this.x, this.y, this.radius, 0, pi2, false);
+                }
+                if (this.destX !== Infinity) {
+                    this.accX = (this.destX - this.x) * this.accelerate;
+                }
+                if (this.destY !== Infinity) {
+                    this.accY = (this.destY - this.y) * this.accelerate;
+                }
+ 
+                this.vx += this.accX;
+                this.vy += this.accY;
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+                this.x += this.vx;
+                this.y += this.vy;
+                this.y += this.gravity;
+ 
+ 
+            }, this)
+            this.hooks.endDraw.add(function (ctx) {
+                if(this.closePath){
+                    ctx.closePath();
+                }
+                if(this.strokeStyle!=='none'){
+                    ctx.stroke()
+                }
+                if(this.fillStyle!=='none'){
+                    ctx.fill()
+                }
+            }, this);
+        }
+        Particle.prototype = {
+            constructor: Particle,
+            init(options) {
+                $.extend(this, options);
+                $.extend(this.original, options);
+            },
+            toRgba: function (opacity) {
+                return 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + (opacity !== void 0 ? opacity : this.opacity) + ')'
+            },
+            toRgb: function () {
+                return 'rgb(' + this.r + ',' + this.g + ',' + this.b + ')'
+            },
+            setAngleSpeed(speed) {
+                this.vx = speed * Math.cos(this.angle);
+                this.vy = speed * Math.sin(this.angle);
+            },
+            startDraw: function (ctx) {
+                this.hooks.startDraw.dispatch(ctx)
+            },
+            draw: function (ctx) {
+                this.hooks.draw.dispatch(ctx)
+            },
+            endDraw: function (ctx) {
+                this.hooks.endDraw.dispatch(ctx)
+            },
+            remove() {
+                this.delta = this.life;
+                this.isDeath = true;
+                this.hooks.remove.dispatch();
+                if(this.parent){
+                    this.parent.removeChild(this);
+                }
+            },
+            get lifePercent() {
+                // return (this.life-this.delta)/this.life;
+                return this.delta / this.life;
+            },
+            restart() {
+                this.delta = 0;
+                this.hooks.restart.dispatch();
+            }
+        }
+        function Container() {
+            this.type = "Container";
+            this.children = [];
+            this.hooks = {
+                add: new signals.Signal(),
+                remove:new  signals.Signal(),
+            }
+            this.parent=null;
+        }
+        Container.prototype.add = function (el) {
+            el.parent=this;
+            this.hooks.add.dispatch(el);
+            this.children.push(el)
+        }
+        Container.prototype.remove = function () {
+            this.hooks.remove.dispatch();
+            if(this.parent){
+                this.parent.removeChild(this);
+            }
+        }
+        Container.prototype.removeChild = function (el) {
+            let index = this.children.indexOf(el);
+            if (index != -1) {
+                el.parent=null;
+                this.children.splice(index, 1);
+            }
+            
+        }
+        Container.prototype.removeAll = function () {
+            this.children.length = 0;
+        }
+        Container.prototype.getSize = function () {
+            return this.children.length;
+        }
+ 
+        function ParticleRender(options) {
+ 
+            options = $.extend({
+                container: document.body,
+                width: 800,
+                height: 600,
+                maxLite: 500,
+                gravity: [0, 0],
+                collisionResponse: false
+            }, options)
+            let container = options.container;
+            let canvas = options.canvas;
+            if (canvas && canvas.nodeType == 1 && canvas.tagName.toLowerCase() !== 'canvas') {
+                container = canvas;
+                canvas = null;
+            }
+            if (!canvas) {
+                canvas = document.createElement('canvas');
+            }
+            canvas.width = options.width;
+            canvas.height = options.height;
+            let ctx = canvas.getContext('2d');
+            if (!canvas.parentNode && container) {
+                container.appendChild(canvas);
+            }
+            // event
+            var hooks = {
+                create: new signals.Signal(),
+                middle: new signals.Signal(),
+                renderBefore: new signals.Signal(),
+                render: new signals.Signal(),
+                renderAfter: new signals.Signal(),
+                startDraw: new signals.Signal(),
+                draw: new signals.Signal(),
+                endDraw: new signals.Signal(),
+                tick: new signals.Signal()
+            }
+ 
+ 
+            let particles = new Container(ctx);
+            function defaultCreator(index, container) {
+                return new Particle();
+            }
+            function create(count, container, creator) {
+                var i = -1;
+                container = container || particles;
+                creator = creator || defaultCreator
+                while (++i < count) {
+                    let particle = creator(i, container);
+                    container.add(particle);
+                }
+                return particles;
+            }
+            let lastTime;
+            function renderBefore(ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.save();
+            }
+            function render(time) {
+                lastTime = lastTime ? lastTime : time;
+                let delta = time - lastTime;
+                lastTime = time;
+                hooks.renderBefore.dispatch(ctx);
+                hooks.render.dispatch(ctx, delta);
+                hooks.renderAfter.dispatch(ctx);
+            }
+            function renderAfter(ctx) {
+                ctx.restore();
+            }
+            function renderContainer(ctx, delta) {
+                let children = this.children, deletes = [];
+                for (let i = 0, len = children.length; i < len; i++) {
+                    let particle = children[i];
+                    if (particle instanceof Container) {
+                        if (particle.getSize() > 0) {
+                            renderContainer.call(particle, ctx, delta)
+                        } else {
+                            deletes.push(particle);
+                        }
+                    }
+                    else if (!particle.isDeath) {
+                        particle.delta += delta;
+                        if (particle.loop && particle.delta >= particle.life) {
+                            particle.restart();
+                        }
+                        else if (particle.delta >= particle.life) {
+                            particle.delta = particle.life;
+                            particle.isDeath = true;
+                            deletes.push(particle);
+                        }
+                        // particle.startDraw(ctx);
+                        hooks.startDraw.dispatch(particle, ctx);
+                        hooks.draw.dispatch(particle, ctx);
+                        hooks.endDraw.dispatch(particle, ctx);
+                        // particle.draw(ctx);
+                        //particle.endDraw(ctx)
+                    }
+                }
+                for (let i = 0, len = deletes.length; i < len; i++) {
+                    deletes[i].remove();
+                }
+            }
+            function renderParticles(ctx, delta) {
+                renderContainer.call(particles, ctx, delta)
+            }
+            let pi2 = Math.PI * 2;
+            function startDraw(particle, ctx) {
+                particle.startDraw(ctx);
+            }
+            function draw(particle, ctx) {
+                hooks.middle.dispatch(particle, ctx);
+                particle.draw(ctx);
+            }
+            function endDraw(particle, ctx) {
+                particle.endDraw(ctx);
+            }
+            function collisionResponse(particle, ctx) {
+                if (particle.collision && particle.collision()) {
+ 
+                }
+            }
+            let middles = []
+            //renderer
+            hooks.renderBefore.add(renderBefore)
+            hooks.render.add(renderParticles);
+            hooks.renderAfter.add(renderAfter);
+            //draw
+            hooks.startDraw.add(startDraw);
+            hooks.draw.add(draw);
+            hooks.endDraw.add(endDraw);
+            // middle
+            if (options.collisionResponse) {
+                hooks.middle.add(collisionResponse);
+            }
+            // ticker add render
+            hooks.tick.add(render);
+            function start() {
+                function ticker(time) {
+                    hooks.tick.dispatch(time);
+                    requestAnimationFrame(ticker);
+                }
+                requestAnimationFrame(ticker);
+            }
+            start();
+            return {
+                ctx: ctx,
+                hooks: hooks,
+                particles: particles,
+                render: render,
+                create: create
+            }
+        }
+ 
+        function random(min, max) {
+            return min + Math.round(Math.random() * (max - min))
+        }
+        exmapleInstance.addExample('粒子', function (page) {
+            let gui = page.operation;
+ 
+            var system = ParticleRender({
+                canvas: page.el,
+            })
+ 
+            system.hooks.create.add(function (particle, ctx) {
+                particle.radius = 1;
+                particle.vx = -1 + Math.random() * 2;
+                particle.vy = -1 - Math.random() * 2;
+                particle.x = 300;
+                particle.y = 300;
+                particle.fillStyle = 'hsla(0,100%,50%,1)';
+                particle.life = random(50, 500);
+            })
+            system.hooks.draw.add(function (particle, ctx) {
+                if (particle.isDeath) {
+                    system.create(1);
+                }
+                ctx.fillStyle = particle.toRgba()
+            }, system.hooks.draw, 1)
+            system.create(200);
+ 
+        })
+        exmapleInstance.addExample('fire', function (page) {
+            let gui = page.operation;
+ 
+            var system = ParticleRender({
+                canvas: page.el,
+            })
+            system.hooks.renderBefore.add(function (ctx) {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.fillStyle = 'rgb(0,0,0)'
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.globalCompositeOperation = 'lighter';
+                // ctx.translate(400,300)
+                // ctx.rotate(180*Math.PI/180)
+                // ctx.translate(-400,-300)
+            })
+            system.particles.hooks.add.add(function (particle, ctx) {
+                particle.radius = 0.5 + Math.random();
+                particle.vx = -1 + Math.random() * 2;
+                particle.vy = -1 * Math.random() * 5;
+                particle.x = 300;
+                particle.y = 300;
+                particle.r = 255;
+                particle.g = 0;
+                particle.b = random(0, 52);
+                particle.life = random(50, 500);
+            })
+            system.hooks.draw.add(function (particle, ctx) {
+                if (particle.isDeath) {
+                    system.create(1);
+                    this.halt();
+                    return;
+                }
+ 
+                //  ctx.globalAlpha=particle.opacity;
+                var g = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.radius);
+                let rgba = particle.toRgba();
+                g.addColorStop(0, rgba)
+                g.addColorStop(0.5, rgba)
+                g.addColorStop(1, particle.toRgba(0));
+                // g.addColorStop(0,'hsla(0,100%,50%,0)');
+                // g.addColorStop(0.2,'hsla(0,100%,50%,'+particle.opacity+')')
+                // g.addColorStop(0.5,'hsla(0,100%,50%,0)')
+                particle.fillStyle = g;
+ 
+                particle.opacity = (particle.life - particle.delta) / particle.life;
+                particle.radius++;
+ 
+ 
+            }, system.hooks.draw, 1)
+            system.create(150);
+ 
+        })
+        exmapleInstance.addExample('烟花', function (page) {
+            let gui = page.operation;
+ 
+ 
+            gui.add({
+                fire: function () {
+                    showFire()
+                }
+            }, 'fire').name('发射');
+            var system = ParticleRender({
+                canvas: page.el,
+            })
+ 
+            system.hooks.renderBefore.add(function (ctx) {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.fillStyle = 'rgb(0,0,0)'
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.globalCompositeOperation = 'lighter';
+                // ctx.translate(400,300)
+                // ctx.rotate(180*Math.PI/180)
+                // ctx.translate(-400,-300)
+            })
+            function showfireWork(posX, posY) {
+                let fireworks = new Container();
+                fireworks.hooks.add.add(function (particle) {
+                    particle.x = posX;
+                    particle.y = posY;
+ 
+                    let radius = random(100, 400);
+                    let angle = random(140, 400);
+                    let radianX = Math.cos(angle / 180 * Math.PI);
+                    let radianY = Math.sin(angle / 180 * Math.PI);
+                    let tx = particle.x + radius * radianX;
+                    let ty = particle.y + radius * radianY;
+                    let dx = tx - particle.x;
+                    let dy = ty - particle.y;
+                    let squareX = dx * dx;
+                    let squareY = dy * dy;
+                    let squareDistance = squareX + squareY;
+                    let distance = Math.sqrt(squareDistance);
+ 
+                    let angleSpeedX = dx / distance;
+                    let angleSpeedY = dy / distance;
+ 
+                    let angleSpeed = -5 + Math.random() * 10;
+                    particle.radius = random(1, 2);
+                    particle.vx = angleSpeed * Math.cos(angle);
+                    particle.vy = angleSpeed * Math.sin(angle);
+                    particle.distance = distance;
+                    particle.radianX = radianX;
+                    particle.radianY = radianY;
+                    particle.angleSpeedX = angleSpeedX;
+                    particle.angleSpeedY = angleSpeedY;
+                    particle.opacity = particle.radius / 2;
+                    particle.gravity = 2;
+                    particle.r = random(0, 255);
+                    particle.g = random(0, 255);
+                    particle.b = random(0, 255);
+                    particle.life = random(1000, 3000);
+                    particle.fillStyle = particle.toRgba()
+ 
+                    let orgOpacity = particle.opacity;
+                    particle.hooks.startDraw.add(function () {
+                        particle.opacity = (1 - particle.lifePercent) * orgOpacity
+                    })
+ 
+                })
+                system.create(350, fireworks);
+                system.particles.add(fireworks);
+            }
+            function showFire() {
+                let x2 = random(100, 700);
+                let y2 = random(150, 200)
+                let fire = new Particle();
+                fire.x = x2;
+                fire.y = 600;
+                fire.radius = 5;
+                fire.vy = -1;
+                fire.life = 500;
+                fire.ty = y2;
+                //fire.look=true;
+                // fire.delay=2000;
+                fire.hooks.draw.removeAll();
+                fire.fillStyle = '#ff0000'
+                fire.hooks.draw.add(function (ctx) {
+                    if (this.isDeath) {
+                        showfireWork(x2, y2);
+                        return;
+                    }
+                    let y = this.y + (this.ty - this.y) * this.lifePercent;
+ 
+ 
+                    ctx.rect(this.x, y, 5, 20, 0, pi2, false);
+ 
+                    this.radius += 0.1;
+ 
+                }, fire)
+                system.particles.add(fire);
+            }
+ 
+ 
+            system.create(500);
+ 
+        })
+ 
+        exmapleInstance.addExample('粒子文字', function (page) {
+            let gui = page.operation;
+ 
+            let ops = {
+                text: "hello word",
+                start: function () {
+                    init();
+                }
+            }
+            gui.add(ops, 'text')
+            gui.add(ops, 'start')
+            var width = 800, height = 600;
+            var system = ParticleRender({
+                canvas: page.el,
+                width,
+                height
+            })
+            var ctx = system.ctx;
+            function init() {
+                let fireworks = new Container();
+                ctx.clearRect(0, 0, width, height);
+                ctx.font = '40px Arial';
+                ctx.fillStyle = 'rgba(255,0,0,1)';
+                ctx.fillText(ops.text, width / 2, height / 2)
+                let imageData = ctx.getImageData(0, 0, width, height);
+                let data = imageData.data;
+ 
+ 
+ 
+                // for(var i=0;i<width;i+=Math.round(width/150)){
+                // for(var j=0;j<height;j+=Math.round(width/150)){
+                //     if(data[ ((i + j*width)*4) + 3] > 150){
+                //         let particle=new Particle();
+ 
+                //             particle.init({
+                //             x:width*Math.random(),
+                //             y:height*Math.random(),
+                //             destX:i,
+                //             destY:j,
+                //             life:Infinity,
+                //             radius:1,
+                //             vx:(0.5-Math.random())*20,
+                //             vy:(0.5-Math.random())*20,
+                //             r:random(100,255),
+                //             friction:0.98
+                //             })
+                //             particle.fillStyle=particle.toRgba();
+                //             fireworks.add(particle);
+                //     }
+                // }
+                // }
+                for (var y = 0; y < height; y += 1) {
+                    for (var x = 0; x < width; x += 1) {
+                        var i = y * width + x;
+                        if (data[i * 4] >= 255) {
+ 
+                            let particle = new Particle();
+ 
+                            particle.init({
+                                x: width * Math.random(),
+                                y: height * Math.random(),
+                                destX: x,
+                                destY: y,
+                                life: Infinity,
+                                radius: 1,
+                                vx: (0.5 - Math.random()) * 20,
+                                vy: (0.5 - Math.random()) * 20,
+                                r: random(100, 255),
+                                friction: 0.98
+                            })
+                            particle.fillStyle = particle.toRgba();
+                            fireworks.add(particle);
+                        }
+                    }
+                }
+                system.particles.removeAll();
+                system.particles.add(fireworks);
+ 
+            }
+            let mouse = { x: 0, y: 0 }
+            ctx.canvas.addEventListener('mousemove', function (e) {
+                mouse.x = e.pageX;//-page.el.getBoundingClientRect().left;
+                mouse.y = e.pageY;//-page.el.getBoundingClientRect().top;
+            })
+ 
+            system.hooks.renderBefore.add(function (ctx) {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.fillStyle = 'rgb(0,0,0)'
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.globalCompositeOperation = 'screen'//'lighter';
+ 
+            });
+            system.hooks.render.add(function (ctx, delta) {
+ 
+ 
+            })
+            system.hooks.draw.add(function (particle) {
+                let dx = (mouse.x - particle.x);
+                let dy = (mouse.y - particle.y);
+ 
+ 
+                let ds = dx * dx + dy * dy;
+                if (ds < 100 * 100) {
+                    particle.accX = dx * 0.01;
+                    particle.accY = dy * 0.01;
+                    particle.vx += particle.accX;
+                    particle.vy += particle.accY;
+ 
+                }
+ 
+            })
+ 
+            //  system.create(500);
+ 
+        })
+        exmapleInstance.addExample('闪电', function (page) {
+            var width = 800, height = 600;
+            var system = ParticleRender({
+                canvas: page.el,
+                width,
+                height
+            });
+            system.hooks.renderBefore.add(function (ctx) {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.fillStyle = 'rgb(0,0,0)'
+                ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.globalCompositeOperation = 'screen'//'lighter';
+ 
+            });
+            function createLightning(x,y){
+                let particle=new Particle();
+                let maxPath=random(15,30);
+                let rangeX=random(10,40);
+                let rangeY=random(10,30);
+ 
+                particle.init({
+                    life:random(500,1500),
+                   // loop:true,
+                    r:255,
+                    g:255,
+                    b:255,
+                    paths:[
+                        [x,y]
+                    ]
+                });
+ 
+                particle.hooks.startDraw.add(function(ctx){
+                    this.opacity=1-this.lifePercent;
+                    ctx.lineWidth=random(1,5);
+                    this.strokeStyle=this.toRgba(this.opacity);
+                    ctx.fillStyle='rgb(255,255,255,'+random(5,10)/100+')';
+                    ctx.fillRect(0,0,width,height)
+                 
+                },particle);
+                particle.hooks.draw.add(function(ctx){
+                    if(this.paths.length<maxPath){
+                        let prevPath=this.paths[this.paths.length-1];
+                        let x=prevPath[0]+(1-Math.random()*2)*rangeX;
+                        let y=prevPath[1]+Math.random()*rangeY;
+                        this.paths.push([x,y])
+                    }
+             
+                },particle);
+             
+                return particle;
+            }  
+            function init(){
+                var count=random(1,3);
+                var x=random(100,width-100);
+                var y=random(100,300);
+                let i=-1;
+                while(++i<count){
+                    let el=createLightning(x,y,count);
+                    system.particles.add(el);
+                }      
+                setTimeout(init,2000)    
+            }
+           
+            init();
+        })
+   
+        exmapleInstance.addExample('波浪',function(page){
+ 
+            let ops={
+                water:false,
+                waveNum:2,
+                waveHeightMin:20,
+                waveHeightMax:20
+            }
+            page.operation.add(ops,'water').name('水');
+            page.operation.add(ops,'waveNum',0,10,1).name('波峰').onChange(function(v){
+                init()
+            });
+            page.operation.add(ops,'waveHeightMin',0,100)
+            page.operation.add(ops,'waveHeightMax',0,100)
+            var width = 800, height = 600;
+            var system = ParticleRender({
+                canvas: page.el,
+                width,
+                height
+            });
+            let cx=0,cy=height/2,r=20,radian=0,tx=0;
+            let lines=[];
+           function init(){
+                   lines.length=0;
+                let step=Math.PI*2/(width/ops.waveNum);
+                for(let i=0;i<width;i++){
+                    lines.push([i,i*step])
+                }
+           }
+            system.hooks.render.add(function(ctx){
+                ctx.beginPath();
+     
+                for(let i=0;i<lines.length;i++){                               
+                    ctx[i?'lineTo':'moveTo'](lines[i][0],cy+random(ops.waveHeightMin,ops.waveHeightMax)*Math.sin(lines[i][1]));
+                    lines[i][1]-=0.1;
+                }
+               // ctx.stroke();  
+               if(ops.water){
+                    ctx.fillStyle='rgb(0,155,255)';
+                    ctx.lineTo(width, height)
+                    ctx.lineTo(0, height)
+                    ctx.closePath()
+                    ctx.fill();
+               }else{
+                     ctx.strokeStyle='rgb(0,155,255)';    
+                    ctx.stroke();
+               }
+        
+            })
+            init()
+           // system.create(1);
+        })
+    </script>
+</body>
+ 
+</html>

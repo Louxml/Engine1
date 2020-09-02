@@ -1,0 +1,72 @@
+<html>
+<head>
+<style>
+body,
+html {
+    margin: 0;
+    background: white;
+    overflow: hidden;
+    height: 100%;
+}
+#canvas {
+    display: block;
+    background-color: #000;
+}
+#hide {
+    position: absolute;
+    font-size: 30px;
+    font-family: "Trebuchet MS", verdana;
+    color: black;
+    left: 50%;
+    top: 50%;
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    -moz-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+}
+</style>
+</head>
+<body>
+    <div id="hide">I'm hidden!</div>
+    <canvas id="canvas"></canvas>
+</body>
+<script>
+window.onload = function() {
+    var canvas = document.getElementById("canvas");
+    ctx = canvas.getContext("2d");
+    var w = canvas.width = window.innerWidth;
+    var h = canvas.height = 800;
+    var m_w = 10,
+        m2_w = 100;
+    var m_x = 0,
+        m_y = 0;
+    var num = 100;
+    render();
+
+    function render() {
+        clear();
+        for (i = 0; i < num; i++) {
+            dif = (i * m_x) / num;
+            diy = (i * m_y) / num;
+            a = 255;
+            ctx.fillStyle = "rgba(" + a + "," + a + "," + a + ",0.01)";
+            ctx.beginPath();
+            ctx.shadowColor = "rgb(" + a + "," + a + "," + a + ")";
+            ctx.shadowBlur = (i / 2);
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 1;
+            ctx.arc(w / 2 + dif, h / 2 + diy, i, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        requestAnimationFrame(render);
+    }
+
+    function clear() {
+        ctx.clearRect(0, 0, w, h);
+    }
+    document.body.addEventListener("mousemove", function(e) {
+        m_x = e.clientX - (w / 2);
+        m_y = e.clientY - (h / 2);
+    });
+}
+</script>
+</html>

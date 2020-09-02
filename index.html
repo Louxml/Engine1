@@ -1,0 +1,185 @@
+<html lang="zh">
+<head>
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no,target-densitydpi=device-dpi" /> -->
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=yes" /> -->
+<meta content="width=device-width, initial-scale=0.5, maximum-scale=0.5, user-scalable=0" name="viewport" />
+<title>demo测试</title>
+<meta charset="utf8">
+<style>
+*{
+	margin:0;
+	padding:0;
+	border:none;
+	outline:none;
+}
+</style>
+<script src="engine/engine.js"></script>
+</head>
+<body>
+<script>
+	var Game = new Engine.Game();
+	var i,g,ti=0,txt1,txt2,a1,r1,c1,c2,p1,p2,c3,g1,t1,c4,l1,l2,p3,p4;
+	Game.room.add({
+		name:"name",
+
+		onload:function(){
+			// this.load.setUrl("js");
+			this.load.audio('audio','src/audio.mp3'); 
+			this.load.image('i','src/player/1.png');
+			this.load.sprite('role','src/Role.png',160,160);
+			this.load.json('json','src/text.json');
+			this.load.tilemap('demo','room/demo1.json');
+			
+			// this.load.onprogress = function(i,j,url,ms){
+			// 	console.log(i,j,url,ms);
+			// }
+		},
+		create:function(){
+			// i=0;
+			
+			// console.log(Game.time);
+			this.cameras.main.setBackgroungColor("#fff");
+			g = this.add.image('i',0,100);
+			i = this.add.sprite('role',0,0,0);
+			p1 = this.add.polygon(200,100,[0,0,100,0,150,100,-50,100]);
+			txt1 = this.add.text("Hell6odp!",0,0,{font:'110px 宋体',shadowBlur:30,shadowColor:'#000'});
+			txt2 = this.add.text("Gello! Worldpd",400,100,{font:'60px 楷体'});
+			a1 = this.add.audio('audio',0,0);
+			// r1 = this.add.rectangle(0,200,40,40);
+			r1 = this.add.circle(0,200,20);
+			c1 = this.add.circle(0,0,60);
+
+			// c4 = this.add.camera(0,0);
+			// c4.setBackgroungColor("rgba(0,0,0,0.9)");
+			// c2 = this.add.arc(0,0,90);
+			
+			// p1.polygon = [10,20,30,40,50,60,70,80];
+			p1.color = '#f69';
+			// r1.alpha = 0.5;
+			// r1.scaleY = 2;
+			c3 = this.add.container(0,200);
+			g1 = this.add.group(0,0,p1,2);
+			p1.setAlpha(0.5);
+			t1 = this.add.tilemap('demo');
+			l1 = this.add.light(-160,0);
+			l2 = this.add.light(200,0);
+			c3.add(l1);
+			p3 = this.add.particles(0,-200);
+			p3.play();
+			// a1.play();
+
+			// for(var ai = 0;ai < 10;ai++)this.add.particles(0,-100,{}).play();
+			
+			// console.log(this);
+			// console.log(p3);
+			// t1.setLayerTile('bg',0,3);
+
+			t1.setAlpha(1);
+			t1.setPosition(100,100);
+			t1.setAnchor(0);
+			t1.setRotation(0);
+			t1.setScale(.5);
+			t1.setVisible(true);
+			// t1.setSize(31);
+
+			p2 = g1.create(0,0);
+			p2 = g1.create(-150,0);
+			p2.setRotation(180);
+			// p2.destory();
+			p2 = g1.create(-100,-100);
+
+			c3.add(p1);
+			// r1.setScale(100);
+			c3.add(r1);
+			// p1.destory();
+			// c3.remove(r1);
+			// c3.alpha = 0.5;
+			// c3.scaleY = 2;
+			c3.setSize(100);
+			// p1.polygon[0] = 50;
+			// p1.polygon = [5];
+			// c2.setLineWidth(20);
+			// c2.setArc(0,0);
+			// c2.setColor('#f69c')
+			c1.setColor('#f696');
+			r1.setColor("#69f");
+			// a1.play();
+			g.setPosition(160,160);
+			g.setScale(1,1);
+			g.setRotation(360);
+			g.setAnchor(0.5);
+			g.setSize(100);
+			txt1.setScale(0.5);
+			txt1.setPosition(200,0);
+			this.lights.brightness = 1;
+			l1.brightness = 1;
+			l1.radius = 1000;
+			// console.log(this.cameras.main.x,this.cameras.main.y);
+		},
+		fixed:function(){
+			// g.x++;
+		},
+		update:function(t,dt){
+			// p1.rotate--;
+			c3.rotate++;
+			// c3.setRotation(c3.rotate+this.game.time.roomDetlaTime/1000*90);
+			// r1.setSize(r1.width+1);
+			// p3.y = -dt*10;
+			// p3.x-=10;
+			// c3.setScale(c3.scaleX+0.01);
+			// l1.radius++;
+			// this.cameras.main.x++;
+			// console.log(c3.getRotation());
+			// c2.setArc(c2.start,c2.end+5);
+			// r1.x++;
+			// if(r1.x>400)r1.x = -400;
+			// g.x-=5;
+			// r1.rotate++;
+			// r1.x++;
+			if(dt>20)console.log(dt);
+			// if(a1.audio.currentTime >= 2){
+			// 	p1.polygon[0] = 20;
+			// 	a1.pause();
+			// }
+			// txt1.x+=0.3;
+			// txt1.scaleX-=0.03;
+			// i.x++;
+			// this.cameras.main.++;
+			// g.rotate+=1;
+			// g = this.cameras.main;
+			// g.scaleX += 0.1;
+			// g.scaleY += 0.1;
+			ti += dt;
+			if(ti < 5000){
+				// p3.play();
+				
+			}else if(ti < 10000){
+				// p3.pause();
+				// console.log("暂停");
+			}else if(ti < 13000){
+				// p3.play();
+			}
+		}
+	});
+	
+	Game.room.add({
+		name:'main',
+		create:function(){
+			console.log(this.cameras.main);
+			console.log(Game.render);
+			this.cameras.main.setPosition(200,0);
+		}
+	});
+	Game.room.add({
+		name:'game',
+		create:function(){
+			console.log(this.cameras.main);
+			console.log(Game.render);
+		}
+	});
+	Game.room.start('name');
+	console.log(Game);
+	console.log(Engine);
+</script>
+</body>
+</html>

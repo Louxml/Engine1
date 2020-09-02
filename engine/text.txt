@@ -1,0 +1,65 @@
+1、系统需重组，应按照注册服务，有大类智能管理
+如添加组件，子系统，游戏物体，拓展，要非常方便
+2、light游戏对象 光线可优化
+
+
+BUG
+8月19日
+已修复	camera 将绑定房间限制
+已修复	container位置渲染问题
+已修复	房间添加BUG
+
+8月21日
+优化		Tilemap, 绘制将不再裁剪，tileset块将独立画布
+已修复	light,光源加入容器定位BUG
+已修复	container位置渲染问题
+
+8月22日
+初步完成 Particle 设想，完成属性设定
+初步实现半径模式发射器
+
+8月23日
+particle 性能优化
+
+8月24日
+particle 性能优化
+
+8月25日
+particle 性能优化
+
+8月26日
+初步实现重力发射器
+8月27日
+完成particle重力模式发射器
+
+8月28日
+
+
+粒子系统属性详解
+
+粒子位置类型		positionType
+粒子状态			state
+play()		pause()		emit()
+粒子渲染目标		texture
+粒子数量			total
+持续时间			duration
+生命周期区间		life	lifeCycle
+排放速率			emission
+角度区间			angular	angularCycle
+
+开始大小区间		startSize	starSizeCycle
+结束大小区间		endSize		endSizeCycle
+开始自旋区间		startSpin	startSpinCycle
+结束自旋区间		endSpin		endSpinCycle
+
+开始颜色区间		startColor	startColorCycle
+结束颜色区间		endColor	endColorCycle
+
+
+
+重力模式										放射模式
+速度区间			spend		speedCycle		最大半径区间	startRadius		startRadiusCycle
+发射区间			width		height			最小半径		endradius
+重力方向			GravityX	GravityY		旋转角度区间	accelTan		accelTanCycle
+切线加速度区间	accelTan	accelTanCycle
+径向加速度区间	accelRad	accelRadCycle
